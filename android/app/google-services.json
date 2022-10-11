@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "654978310337",
+    "project_id": "mypushnotifications-bd737",
+    "storage_bucket": "mypushnotifications-bd737.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:654978310337:android:b8ffa778d5c3cb4159f440",
+        "android_client_info": {
+          "package_name": "com.cashneiman.mypushnotifications"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "654978310337-trac1q23d05c51lhete17k11pbks6g7p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzBb-_kjS0F-2uawpRxgb6xzpNrne0lcE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "654978310337-trac1q23d05c51lhete17k11pbks6g7p.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "654978310337-f2l96pvs96b53447im69s05503lu8l21.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cashneiman.mypushnotifications"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
