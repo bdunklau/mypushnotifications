@@ -44,24 +44,24 @@ void main() async {
 //  must be a top-level function  per this:  https://firebase.google.com/docs/cloud-messaging/flutter/receive
 Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Handling a background message =======================================");
-  print("message.messageId: ${message.messageId}");
-  print("message.notification?.title: ${message.notification?.title}");
-  print("message.notification?.body: ${message.notification?.body}");
+  // print("message.notification?.title: ${message.notification?.title}");
+  // print("message.notification?.body: ${message.notification?.body}");
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print('_firebaseMessagingBackgroundHandler:  Handling a background message ${message.messageId}');
   print('_firebaseMessagingBackgroundHandler:  message.data = ${message.data}');
   flutterLocalNotificationsPlugin.show(
       message.data.hashCode,
-      message.notification?.title, //  message.data['title'],
-      message.notification?.body,  //  message.data['body'],
+      message.data['title'],
+      message.data['body'],
       NotificationDetails(
         android: AndroidNotificationDetails(
           channel.id,
           channel.name,
-          //channel.description,
+          //channel.description
         ),
-      ));
+      )
+  );
 }
 
 ///  https://github.com/Amanullahgit/Flutter-v2-FCM-Notifications/blob/master/lib/main.dart
@@ -165,23 +165,35 @@ class _MyHomePageState extends State<MyHomePage> {
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('FirebaseMessaging.onMessage.listen :   got a message');
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-      if (notification != null && android != null) {
-        flutterLocalNotificationsPlugin.show(
-            notification.hashCode,
-            notification.title,
-            notification.body,
-            NotificationDetails(
-              android: AndroidNotificationDetails(
-                channel.id,
-                channel.name,
-                //channel.description,
-                icon: android?.smallIcon,
-              ),
-            ));
-      }
+    print('FirebaseMessaging.onMessage.listen :   got a message');
+    RemoteNotification? notification = message.notification;
+    AndroidNotification? android = message.notification?.android;
+    flutterLocalNotificationsPlugin.show(
+        message.data.hashCode,
+        message.data['title'],
+        message.data['body'],
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            //channel.description,
+            icon: android?.smallIcon,
+          ),
+        ));
+      // if (notification != null && android != null) {
+      //   flutterLocalNotificationsPlugin.show(
+      //       message.data.hashCode,
+      //       message.data['title'],
+      //       message.data['body'],
+      //       NotificationDetails(
+      //         android: AndroidNotificationDetails(
+      //           channel.id,
+      //           channel.name,
+      //           //channel.description,
+      //           icon: android?.smallIcon,
+      //         ),
+      //       ));
+      // }
     });
     getToken();
     // getTopics();
