@@ -42,6 +42,7 @@ void main() async {
 
 //   https://headsupvideo.atlassian.net/browse/HOAPP-109
 //  must be a top-level function  per this:  https://firebase.google.com/docs/cloud-messaging/flutter/receive
+@pragma('vm:entry-point')    //  mark a function (or other entities, as classes) to indicate to the compiler that it will be used from native code. Without this annotation, the dart compiler could strip out unused functions, inline them, shrink names, etc, and the native code would fail to call it
 Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Handling a background message =======================================");
   // print("message.notification?.title: ${message.notification?.title}");
