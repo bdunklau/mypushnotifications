@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:mypushnotifications/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+
+//   https://www.dbestech.com/tutorials/flutter-firebase-ios-push-notification
+import 'package:overlay_support/overlay_support.dart';
+
 
 ///  Send push notifications to an iOS simulator BUT NOT to an actual iPhone
 ///    -->  https://www.youtube.com/watch?v=kRf_uB49Iuo
@@ -9,7 +15,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 ///
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // FirebaseMessaging messaging = FirebaseMessaging.instance;
   //
   // await messaging.requestPermission(
@@ -22,6 +28,14 @@ void main() async {
   //   sound: true,
   // );
 
+  ///  4:35  of  https://www.youtube.com/watch?v=4Cwp1iA8BaQ&t=88s
+  // bug!  https://github.com/firebase/flutterfire/issues/9689
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
   runApp(const MyApp());
 }
 
@@ -33,7 +47,37 @@ Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("message.messageId: ${message.messageId}");
   print("message.notification?.title: ${message.notification?.title}");
   print("message.notification?.body: ${message.notification?.body}");
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print('_firebaseMessagingBackgroundHandler:  Handling a background message ${message.messageId}');
+  print('_firebaseMessagingBackgroundHandler:  message.data = ${message.data}');
+  flutterLocalNotificationsPlugin.show(
+      message.data.hashCode,
+      message.notification?.title, //  message.data['title'],
+      message.notification?.body,  //  message.data['body'],
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          //channel.description,
+        ),
+      ));
 }
+
+///  https://github.com/Amanullahgit/Flutter-v2-FCM-Notifications/blob/master/lib/main.dart
+///  3:30  of  https://www.youtube.com/watch?v=4Cwp1iA8BaQ&t=88s
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'high_importance_channel', // id
+  'High Importance Notifications', // title
+  //'This channel is used for important notifications.', // description
+  importance: Importance.high,
+);
+
+///  https://github.com/Amanullahgit/Flutter-v2-FCM-Notifications/blob/master/lib/main.dart
+///  3:30  of  https://www.youtube.com/watch?v=4Cwp1iA8BaQ&t=88s
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+
 
 
 class MyApp extends StatelessWidget {
@@ -42,7 +86,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    var materialApp = MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.
@@ -58,6 +102,8 @@ class MyApp extends StatelessWidget {
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
+    return OverlaySupport(child: materialApp);
+    // return materialApp;
   }
 }
 
@@ -80,6 +126,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String? token;
+  List subscribed = [];
+  List topics = [
+    'Samsung',
+    'Apple',
+    'Huawei',
+    'Nokia',
+    'Sony',
+    'HTC',
+    'Lenovo'
+  ];
   int _counter = 0;
 
   void _incrementCounter() {
@@ -95,41 +152,92 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    registerNotification();
+    // registerNotification();
+    // super.initState();
+
+    //   https://github.com/Amanullahgit/Flutter-v2-FCM-Notifications/blob/master/lib/main.dart
+    //   https://www.youtube.com/watch?v=4Cwp1iA8BaQ   5:10
+    super.initState();
+    var initialzationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings =
+    InitializationSettings(android: initialzationSettingsAndroid);
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('FirebaseMessaging.onMessage.listen :   got a message');
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id,
+                channel.name,
+                //channel.description,
+                icon: android?.smallIcon,
+              ),
+            ));
+      }
+    });
+    getToken();
+    // getTopics();
   }
 
   // see login.dart for complete example
-  void registerNotification() async {
+  // void registerNotification() async {
+  //
+  //   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //
+  //   // 2. Instantiate Firebase Messaging
+  //   NotificationSettings settings = await messaging.requestPermission(
+  //     alert: true,
+  //     announcement: false,
+  //     badge: true,
+  //     carPlay: false,
+  //     criticalAlert: false,
+  //     provisional: false,
+  //     sound: true,
+  //   );
+  //
+  //
+  //
+  //
+  //   //   https://www.dbestech.com/tutorials/flutter-firebase-ios-push-notification
+  //   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+  //     var token = await messaging.getToken();
+  //     print("token:  $token");
+  //     //  eb8-LN6qRwuUrSV3_rnOE1:APA91bE-eK1lKpNNDKSV8KkQ2AWTOB21QfItHRqH3WF80eMQP4Qza9xbQo9GaE1fkXZkBzTKwItnE3EnlE37-HZqQ7eStW5dES2gJJk0oRkvCuOvEPknvmTNDix-IhnQD00Qanb_TCUz
+  //
+  //     /**
+  //      * this works on iOS because we did the Firebase.initializeApp() in AppDelegate.swift
+  //      * I don't know if this works on Android.  I'm guessing it doesn't
+  //      */
+  //     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //       print("FirebaseMessaging.onMessage.listen: ${message.toString()}");
+  //       //  see this for more complete code example  -->  https://www.dbestech.com/tutorials/flutter-firebase-ios-push-notification
+  //       showNotification(message);
+  //     });
+  //
+  //   }
+  //
+  // }
 
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-    await messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
+  showNotification(RemoteMessage message) {
+    showSimpleNotification(
+      Text(message.notification!.title!),
+      leading: NotificationBadge(totalNotifications: 99),
+      subtitle: Text(message.notification!.body!),
+      background: Colors.cyan.shade700,
+      duration: Duration(seconds: 2),
     );
-
-
-    var token = await messaging.getToken();
-    print("token:  $token");
-    //  fsYcZ_ONRFCnX67NEVxx_7:APA91bEbyOAqGhGp62rEO0Zfb6ByVPCBXY6MdHH2kI_kX-XIIFRqWHqjhJF74_Zw0lZ4hvNnTP67Jgz7d03HDLLq_MefY-V2RW8KuwnTOBA6omHf6ztYmy3QFWRzuqip6ishEHdRg1eO
-
-    // bug!  https://github.com/firebase/flutterfire/issues/9689
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    /**
-     * this works on iOS because we did the Firebase.initializeApp() in AppDelegate.swift
-     * I don't know if this works on Android.  I'm guessing it doesn't
-     */
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("FirebaseMessaging.onMessage.listen: ${message.toString()}");
-    });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return Scaffold(
+    var scaffold = Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
@@ -180,6 +288,63 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+
+    return scaffold;
+  }
+
+
+  //   https://github.com/Amanullahgit/Flutter-v2-FCM-Notifications/blob/master/lib/main.dart#L141
+  getToken() async {
+    token = await FirebaseMessaging.instance.getToken();
+    setState(() {
+      token = token;
+    });
+    print("token:  $token");
+  }
+
+  // getTopics() async {
+  //   await FirebaseFirestore.instance
+  //       .collection('topics')
+  //       .get()
+  //       .then((value) => value.docs.forEach((element) {
+  //     if (token == element.id) {
+  //       subscribed = element.data().keys.toList();
+  //     }
+  //   }));
+  //
+  //   setState(() {
+  //     subscribed = subscribed;
+  //   });
+  // }
+
+
+}
+
+
+class NotificationBadge extends StatelessWidget {
+  final int totalNotifications;
+
+  const NotificationBadge({required this.totalNotifications});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40.0,
+      height: 40.0,
+      decoration: new BoxDecoration(
+        color: Colors.red,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            '$totalNotifications',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+        ),
+      ),
     );
   }
 }
