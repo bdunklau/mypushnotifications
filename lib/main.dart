@@ -166,21 +166,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('FirebaseMessaging.onMessage.listen :   got a message');
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
-    flutterLocalNotificationsPlugin.show(
-        message.data.hashCode,
-        message.data['title'],
-        message.data['body'],
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            //channel.description,
-            icon: android?.smallIcon,
-          ),
-        ));
+      print('FirebaseMessaging.onMessage.listen :   got a message');
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+      flutterLocalNotificationsPlugin.show(
+          message.data.hashCode,
+          message.data['title'],
+          message.data['body'],
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              //channel.description,
+              icon: android?.smallIcon,
+            ),
+          ));
       // if (notification != null && android != null) {
       //   flutterLocalNotificationsPlugin.show(
       //       message.data.hashCode,
