@@ -59,6 +59,7 @@ Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         android: AndroidNotificationDetails(
           channel.id,
           channel.name,
+          priority: Priority.high, // <--  this is how I got the overlay to appear on the Moto E4
           //channel.description
         ),
       )
@@ -174,11 +175,13 @@ class _MyHomePageState extends State<MyHomePage> {
           message.data['title'],
           message.data['body'],
           NotificationDetails(
-            android: AndroidNotificationDetails(
+            android: AndroidNotificationDetails( // LOTS of constructor options !  Ctrl-B to see
               channel.id,
               channel.name,
-              //channel.description,
+              channelDescription: channel.description,
               icon: android?.smallIcon,
+              //importance: Importance.max,
+              priority: Priority.high, // <--  this is how I got the overlay to appear on the Moto E4
             ),
           ));
       // if (notification != null && android != null) {
